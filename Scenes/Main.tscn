@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://bjxsb8vl1ssrg"]
+
+[ext_resource type="Script" uid="uid://b6042cqcdcf5r" path="res://UI/Main.cs" id="1_r150o"]
+
+[node name="Main" type="Control" unique_id=1539453416]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_r150o")
+
+[node name="MainLayout" type="HBoxContainer" parent="." unique_id=1095737098]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Sidebar" type="PanelContainer" parent="MainLayout" unique_id=1289562842]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="MapContainer" type="PanelContainer" parent="MainLayout" unique_id=407626999]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MapDisplay" type="TextureRect" parent="MainLayout/MapContainer" unique_id=436794780]
+layout_mode = 2
+stretch_mode = 5
