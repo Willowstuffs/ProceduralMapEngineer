@@ -1,0 +1,14 @@
+# Godot-specific ignores
+.godot/
+*.translation
+/android/
+
+# C# and .NET ignores
+.vs/
+.idea/
+.vscode/
+bin/
+obj/
+*.csproj.user
+TestProject/
+
