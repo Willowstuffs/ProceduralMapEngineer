@@ -1,72 +1,80 @@
 using Godot;
 using System;
+using ProceduralMapPipeline.Core;
+using ProceduralMapPipeline.Modules.Noise;
 
 namespace ProceduralMapPipeline.UI;
 
-/// <summary>
-/// Główny kontroler widoku aplikacji. Odpowiada za spinanie interfejsu 
-/// z logiką generacji i wyświetlanie wyników w przestrzeni wizualnej.
-/// </summary>
 public partial class Main : Control
 {
 	private TextureRect _mapDisplay;
 	private SpinBox _seedInput;
 	private Button _generateButton;
 	private Button _exportButton;
+	private Button _randomSeedButton;
+
+	// Instancja naszego managera potoku
+	private PipelineManager _pipelineManager;
 
 	public override void _Ready()
 	{
-		// 1. Pobieranie referencji do węzłów
+		// 1. Inicjalizacja rdzenia algorytmicznego
+		_pipelineManager = new PipelineManager();
+		// Na stałe dodajemy nasz nowy krok szumu Simplex
+		_pipelineManager.AddStep(new NoiseGenerationStep());
+
+		// 2. Pobieranie referencji do UI
 		_mapDisplay = GetNode<TextureRect>("MainLayout/MapContainer/MapDisplay");
-		
 		var sidebarVBox = GetNode<VBoxContainer>("MainLayout/Sidebar/VBoxContainer");
 		_seedInput = sidebarVBox.GetNode<SpinBox>("SeedContainer/SeedInput");
 		_generateButton = sidebarVBox.GetNode<Button>("GenerateButton");
 		_exportButton = sidebarVBox.GetNode<Button>("ExportButton");
+		_randomSeedButton = sidebarVBox.GetNode<Button>("SeedContainer/RandomSeedButton");
 
-		// 2. Subskrypcja sygnałów (Eventów UI)
+		// 3. Subskrypcja sygnałów
 		_generateButton.Pressed += OnGenerateButtonPressed;
 		_exportButton.Pressed += OnExportButtonPressed;
+		_randomSeedButton.Pressed += OnRandomSeedButtonPressed;
 
-		// Wygenerowanie pierwszej mapy na start
-		GenerateMockNoise();
+		// Pierwsze uruchomienie
+		RunPipelineAndRender();
 	}
 
-	private void OnGenerateButtonPressed()
+	private void OnGenerateButtonPressed() => RunPipelineAndRender();
+	
+	private void OnRandomSeedButtonPressed()
 	{
-		GenerateMockNoise();
+		_seedInput.Value = GD.Randi();
+		RunPipelineAndRender();
 	}
 
 	private void OnExportButtonPressed()
 	{
-		// Na ten moment tylko logujemy akcję w konsoli na dole ekranu
-		GD.Print("Export SVG triggerowany - tutaj później podepniemy logikę zapisu!");
+		GD.Print("Export SVG triggerowany - logika wkrótce!");
 	}
 
 	/// <summary>
-	/// Generuje deterministyczny szum bieli na podstawie Seeda z UI.
+	/// Odpala potok przetwarzania danych, a następnie renderuje wynik matematyczny na ekranie.
 	/// </summary>
-	private void GenerateMockNoise()
+	private void RunPipelineAndRender()
 	{
 		int mapWidth = 256;
 		int mapHeight = 256;
-
-		// Pobieramy wartość Seeda z kontrolki UI
 		ulong currentSeed = (ulong)_seedInput.Value;
-		
-		// Tworzymy dedykowany generator dla mapy, aby mieć pełną kontrolę nad determinizmem
-		var rng = new RandomNumberGenerator();
-		rng.Seed = currentSeed;
 
+		// 1. Wykonanie potoku (Logika biznesowa odseparowana od UI)
+		MapData finalMapData = _pipelineManager.ExecutePipeline(mapWidth, mapHeight, currentSeed);
+
+		// 2. Konwersja danych analitycznych (MapData) na reprezentację wizualną (Image)
 		var image = Image.CreateEmpty(mapWidth, mapHeight, false, Image.Format.Rgb8);
 
 		for (int x = 0; x < mapWidth; x++)
 		{
 			for (int y = 0; y < mapHeight; y++)
 			{
-				// rng.Randf() generuje wartości dzięki stałemu Seedowi zawsze w ten sam sposób
-				float colorValue = rng.Randf() > 0.5f ? 1f : 0f;
-				image.SetPixel(x, y, new Color(colorValue, colorValue, colorValue));
+				float val = finalMapData.GetValue(x, y);
+				// Tworzymy mapę w skali szarości na podstawie znormalizowanych danych [0, 1]
+				image.SetPixel(x, y, new Color(val, val, val));
 			}
 		}
 
