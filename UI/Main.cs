@@ -2,6 +2,7 @@ using Godot;
 using System;
 using ProceduralMapPipeline.Core;
 using ProceduralMapPipeline.Modules.Noise;
+using ProceduralMapPipeline.Modules.CellularAutomata;
 
 namespace ProceduralMapPipeline.UI;
 
@@ -21,7 +22,9 @@ public partial class Main : Control
 		// 1. Inicjalizacja rdzenia algorytmicznego
 		_pipelineManager = new PipelineManager();
 		// Na stałe dodajemy nasz nowy krok szumu Simplex
-		_pipelineManager.AddStep(new NoiseGenerationStep());
+		//_pipelineManager.AddStep(new NoiseGenerationStep());
+		// Krok 2: Konwersja do dyskretnych komórek i wygładzenie "jaskiń"
+		_pipelineManager.AddStep(new CellularAutomataStep(iterations: 5, threshold: 0.5f));
 
 		// 2. Pobieranie referencji do UI
 		_mapDisplay = GetNode<TextureRect>("MainLayout/MapContainer/MapDisplay");
