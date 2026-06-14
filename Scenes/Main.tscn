@@ -23,6 +23,41 @@ grow_vertical = 2
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 
+[node name="VBoxContainer" type="VBoxContainer" parent="MainLayout/Sidebar" unique_id=1721550254]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainLayout/Sidebar/VBoxContainer" unique_id=2089051800]
+layout_mode = 2
+text = "Ustawienia potoku"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/Sidebar/VBoxContainer" unique_id=216030580]
+layout_mode = 2
+
+[node name="SeedContainer" type="HBoxContainer" parent="MainLayout/Sidebar/VBoxContainer" unique_id=1053523623]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/Sidebar/VBoxContainer/SeedContainer" unique_id=1266309988]
+layout_mode = 2
+text = "Globalne ziarno: "
+
+[node name="SeedInput" type="SpinBox" parent="MainLayout/Sidebar/VBoxContainer/SeedContainer" unique_id=164827466]
+layout_mode = 2
+max_value = 1e+21
+
+[node name="RandomSeedButton" type="Button" parent="MainLayout/Sidebar/VBoxContainer/SeedContainer" unique_id=1074801729]
+layout_mode = 2
+text = "Wylosuj"
+
+[node name="GenerateButton" type="Button" parent="MainLayout/Sidebar/VBoxContainer" unique_id=1574922972]
+layout_mode = 2
+text = "Rozpocznij proces"
+
+[node name="ExportButton" type="Button" parent="MainLayout/Sidebar/VBoxContainer" unique_id=282089928]
+layout_mode = 2
+text = "Eksportuj jako SVG"
+
 [node name="MapContainer" type="PanelContainer" parent="MainLayout" unique_id=407626999]
 layout_mode = 2
 size_flags_horizontal = 3

@@ -1,46 +1,75 @@
 using Godot;
 using System;
 
-namespace ProceduralMapPipeline.UI; //PascalCase dla projektu
+namespace ProceduralMapPipeline.UI;
 
-/// <summary> Główny kontroler widoku aplikacji. Odpowiada za spinanie interfejsu 
-/// z logiką generacji i wyświetlanie wyników w przestrzeni wizualnej. </summary>
+/// <summary>
+/// Główny kontroler widoku aplikacji. Odpowiada za spinanie interfejsu 
+/// z logiką generacji i wyświetlanie wyników w przestrzeni wizualnej.
+/// </summary>
 public partial class Main : Control
 {
-	//reminder: prywatne pole klasy z _ na początku
 	private TextureRect _mapDisplay;
+	private SpinBox _seedInput;
+	private Button _generateButton;
+	private Button _exportButton;
 
 	public override void _Ready()
 	{
-		// Pobieranie referencji do węzła w drzewie sceny po ścieżce relatywnej.
-		// Jeśli struktura drzewa to Main -> MainLayout -> MapContainer -> MapDisplay
+		// 1. Pobieranie referencji do węzłów
 		_mapDisplay = GetNode<TextureRect>("MainLayout/MapContainer/MapDisplay");
 		
+		var sidebarVBox = GetNode<VBoxContainer>("MainLayout/Sidebar/VBoxContainer");
+		_seedInput = sidebarVBox.GetNode<SpinBox>("SeedContainer/SeedInput");
+		_generateButton = sidebarVBox.GetNode<Button>("GenerateButton");
+		_exportButton = sidebarVBox.GetNode<Button>("ExportButton");
+
+		// 2. Subskrypcja sygnałów (Eventów UI)
+		_generateButton.Pressed += OnGenerateButtonPressed;
+		_exportButton.Pressed += OnExportButtonPressed;
+
+		// Wygenerowanie pierwszej mapy na start
 		GenerateMockNoise();
 	}
 
-	/// <summary> Generuje tablicę losowych wartości i konwertuje ją na teksturę (szum bieli),
-	/// służącą do testowania połączenia logiki z interfejsem graficznym. </summary>
+	private void OnGenerateButtonPressed()
+	{
+		GenerateMockNoise();
+	}
+
+	private void OnExportButtonPressed()
+	{
+		// Na ten moment tylko logujemy akcję w konsoli na dole ekranu
+		GD.Print("Export SVG triggerowany - tutaj później podepniemy logikę zapisu!");
+	}
+
+	/// <summary>
+	/// Generuje deterministyczny szum bieli na podstawie Seeda z UI.
+	/// </summary>
 	private void GenerateMockNoise()
 	{
-		// Rozdzielczość siatki wejściowej (później przeniesie sie to do globalnych ustawień)
 		int mapWidth = 256;
 		int mapHeight = 256;
 
-		// Pusty obraz w pamięci. RGB 8 bitów na kanał
+		// Pobieramy wartość Seeda z kontrolki UI
+		ulong currentSeed = (ulong)_seedInput.Value;
+		
+		// Tworzymy dedykowany generator dla mapy, aby mieć pełną kontrolę nad determinizmem
+		var rng = new RandomNumberGenerator();
+		rng.Seed = currentSeed;
+
 		var image = Image.CreateEmpty(mapWidth, mapHeight, false, Image.Format.Rgb8);
 
 		for (int x = 0; x < mapWidth; x++)
 		{
 			for (int y = 0; y < mapHeight; y++)
 			{
-				// Zwraca wartość 0.0 lub 1.0 symulując czarny/biały piksel
-				float colorValue = GD.Randf() > 0.5f ? 1f : 0f;
+				// rng.Randf() generuje wartości dzięki stałemu Seedowi zawsze w ten sam sposób
+				float colorValue = rng.Randf() > 0.5f ? 1f : 0f;
 				image.SetPixel(x, y, new Color(colorValue, colorValue, colorValue));
 			}
 		}
 
-		//Aplikowanie do kontrolki UI
 		_mapDisplay.Texture = ImageTexture.CreateFromImage(image);
 	}
 }
