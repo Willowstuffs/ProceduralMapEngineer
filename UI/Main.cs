@@ -14,19 +14,18 @@ public partial class Main : Control
 	private Button _exportButton;
 	private Button _randomSeedButton;
 
-	// Instancja naszego managera potoku
+	//menedżer potoku
 	private PipelineManager _pipelineManager;
 
 	public override void _Ready()
 	{
-		// 1. Inicjalizacja rdzenia algorytmicznego
 		_pipelineManager = new PipelineManager();
-		// Na stałe dodajemy nasz nowy krok szumu Simplex
-		//_pipelineManager.AddStep(new NoiseGenerationStep());
-		// Krok 2: Konwersja do dyskretnych komórek i wygładzenie "jaskiń"
-		_pipelineManager.AddStep(new CellularAutomataStep(iterations: 5, threshold: 0.5f));
+		//hardcoded krok szumu Simplex
+		_pipelineManager.AddStep(new NoiseGenerationStep());
+		//hardcoded konwersja do algorytmu automatów komórkowych: sąsiedztwo Moore'a i podwójne buforowanie
+		//_pipelineManager.AddStep(new CellularAutomataStep(iterations: 5, threshold: 0.5f));
 
-		// 2. Pobieranie referencji do UI
+		//Pobieranie referencji do UI
 		_mapDisplay = GetNode<TextureRect>("MainLayout/MapContainer/MapDisplay");
 		var sidebarVBox = GetNode<VBoxContainer>("MainLayout/Sidebar/VBoxContainer");
 		_seedInput = sidebarVBox.GetNode<SpinBox>("SeedContainer/SeedInput");
@@ -34,23 +33,25 @@ public partial class Main : Control
 		_exportButton = sidebarVBox.GetNode<Button>("ExportButton");
 		_randomSeedButton = sidebarVBox.GetNode<Button>("SeedContainer/RandomSeedButton");
 
-		// 3. Subskrypcja sygnałów
 		_generateButton.Pressed += OnGenerateButtonPressed;
 		_exportButton.Pressed += OnExportButtonPressed;
 		_randomSeedButton.Pressed += OnRandomSeedButtonPressed;
 
-		// Pierwsze uruchomienie
+		//Pierwsze uruchomienie
 		RunPipelineAndRender();
 	}
-
+	
+	//przycisk wywołujący render
 	private void OnGenerateButtonPressed() => RunPipelineAndRender();
 	
+	//przycisk randomizujący ziarno
 	private void OnRandomSeedButtonPressed()
 	{
 		_seedInput.Value = GD.Randi();
 		RunPipelineAndRender();
 	}
 
+	//todo: export
 	private void OnExportButtonPressed()
 	{
 		GD.Print("Export SVG triggerowany - logika wkrótce!");
@@ -65,10 +66,10 @@ public partial class Main : Control
 		int mapHeight = 256;
 		ulong currentSeed = (ulong)_seedInput.Value;
 
-		// 1. Wykonanie potoku (Logika biznesowa odseparowana od UI)
+		//Wykonanie potoku , odseparowane od UI
 		MapData finalMapData = _pipelineManager.ExecutePipeline(mapWidth, mapHeight, currentSeed);
 
-		// 2. Konwersja danych analitycznych (MapData) na reprezentację wizualną (Image)
+		//Konwersja danych analitycznych (MapData) na reprezentację wizualną (Image)
 		var image = Image.CreateEmpty(mapWidth, mapHeight, false, Image.Format.Rgb8);
 
 		for (int x = 0; x < mapWidth; x++)
@@ -76,7 +77,7 @@ public partial class Main : Control
 			for (int y = 0; y < mapHeight; y++)
 			{
 				float val = finalMapData.GetValue(x, y);
-				// Tworzymy mapę w skali szarości na podstawie znormalizowanych danych [0, 1]
+				//Mapa w skali szarości na podstawie znormalizowanych danych [0, 1]
 				image.SetPixel(x, y, new Color(val, val, val));
 			}
 		}

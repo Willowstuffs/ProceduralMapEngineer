@@ -24,17 +24,16 @@ public class CellularAutomataStep : GenerationStep
 		int width = inputData.Width;
 		int height = inputData.Height;
 
-		// ETAP 1: Binaryzacja. 
-		// Zamieniamy płynne wartości szumu [0.0 - 1.0] na twarde stany dyskretne: 0 (pusta) lub 1 (ściana).
+		//Binaryzacja, stan pusty lub ściana
 		for (int i = 0; i < inputData.Grid.Length; i++)
 		{
 			inputData.Grid[i] = inputData.Grid[i] >= _threshold ? 1f : 0f;
 		}
 
-		// ETAP 2: Symulacja (Iteracje Automatu)
+		//Symulacja, iteracje automatu
 		for (int step = 0; step < _iterations; step++)
 		{
-			// Tworzymy bufor, by czytać stary stan podczas modyfikowania nowego
+			//nowy bufor, by czytać stary stan podczas modyfikowania nowego
 			float[] oldGrid = new float[inputData.Grid.Length];
 			Array.Copy(inputData.Grid, oldGrid, inputData.Grid.Length);
 
@@ -44,16 +43,16 @@ public class CellularAutomataStep : GenerationStep
 				{
 					int neighborWallCount = GetSurroundingWallCount(oldGrid, x, y, width, height);
 
-					// Reguła przeżycia (Conway's style / Cave smoothing)
+					//Reguła przeżycia (Conway/Cave smoothing)
 					if (oldGrid[y * width + x] == 1f)
 					{
-						// Jeśli ściana ma za mało sąsiadów, umiera (staje się podłogą)
+						// Jeśli ściana ma za mało sąsiadów, staje się podłogą
 						if (neighborWallCount < 4)
 							inputData.SetValue(x, y, 0f);
 					}
 					else
 					{
-						// Jeśli podłoga ma dużo sąsiadujących ścian, staje się ścianą
+						//Jeśli podłoga ma dużo sąsiadujących ścian, staje się ścianą
 						if (neighborWallCount > 4)
 							inputData.SetValue(x, y, 1f);
 					}
@@ -65,7 +64,7 @@ public class CellularAutomataStep : GenerationStep
 	}
 
 	/// <summary>
-	/// Zlicza żywych sąsiadów w promieniu 1 komórki (Sąsiedztwo Moore'a).
+	/// Zlicza żywych sąsiadów w promieniu 1 komórki sąsiedztwem Moore'a
 	/// </summary>
 	private int GetSurroundingWallCount(float[] grid, int gridX, int gridY, int width, int height)
 	{
@@ -75,19 +74,18 @@ public class CellularAutomataStep : GenerationStep
 		{
 			for (int neighborY = gridY - 1; neighborY <= gridY + 1; neighborY++)
 			{
-				// Pomijamy sprawdzanie samej siebie
+				//Pomija sprawdzanie samej siebie
 				if (neighborX == gridX && neighborY == gridY)
 					continue;
 
-				// Zabezpieczenie krawędzi: jeśli wychodzimy poza mapę, traktujemy to jako ścianę, 
-				// dzięki temu mapa "zamyka się" na brzegach.
+				//Zabezpieczenie krawędzi: wyjście poza mape traktuje to jak ściane
 				if (neighborX < 0 || neighborX >= width || neighborY < 0 || neighborY >= height)
 				{
 					wallCount++;
 				}
 				else
 				{
-					// Płaskie indeksowanie dla bufora
+					//Płaskie indeksowanie dla bufora
 					if (grid[neighborY * width + neighborX] == 1f)
 					{
 						wallCount++;

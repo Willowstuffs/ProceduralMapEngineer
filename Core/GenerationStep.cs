@@ -11,9 +11,7 @@ public abstract class GenerationStep
 	/// </summary>
 	public string StepName { get; protected set; } = "Base Step";
 
-	/// <summary>
-	/// Główna metoda wykonująca algorytm.
-	/// </summary>
+	/// <summary> Główna metoda wykonująca algorytm.</summary>
 	/// <param name="inputData">Mapa wejściowa z poprzedniego kroku (lub pusta siatka).</param>
 	/// <param name="seed">Globalne lub lokalne ziarno determinujące losowość kroku.</param>
 	/// <returns>Zmodyfikowane dane mapy.</returns>
