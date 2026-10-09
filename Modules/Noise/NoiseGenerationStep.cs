@@ -14,13 +14,14 @@ public class NoiseGenerationStep : GenerationStep
 	public NoiseGenerationStep()
 	{
 		StepName = "Generator Szumu Spójnego";
+		Category = StepCategory.Generator; //kategoria do blokowania akcji
 		
 		//Konfiguracja bazowa szumu
 		//todo: parametry w ui
 		_noise = new FastNoiseLite();
 		_noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
 		//Częstotliwość, tzn gęstość struktur. Im mniejsza, tym większe
-		_noise.Frequency = 0.01f;
+		_noise.Frequency = 0.5f;
 	}
 
 	public override MapData Execute(MapData inputData, ulong seed)

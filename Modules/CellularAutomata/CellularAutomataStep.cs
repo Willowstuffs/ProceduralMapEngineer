@@ -15,6 +15,7 @@ public class CellularAutomataStep : GenerationStep
 	public CellularAutomataStep(int iterations = 4, float threshold = 0.5f)
 	{
 		StepName = "Automat Komórkowy (Wygładzanie)";
+		Category = StepCategory.Modifier;
 		_iterations = iterations;
 		_threshold = threshold;
 	}

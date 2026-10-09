@@ -23,7 +23,7 @@ public partial class Main : Control
 		//hardcoded krok szumu Simplex
 		_pipelineManager.AddStep(new NoiseGenerationStep());
 		//hardcoded konwersja do algorytmu automatów komórkowych: sąsiedztwo Moore'a i podwójne buforowanie
-		//_pipelineManager.AddStep(new CellularAutomataStep(iterations: 5, threshold: 0.5f));
+		_pipelineManager.AddStep(new CellularAutomataStep(iterations: 5, threshold: 0.5f));
 
 		//Pobieranie referencji do UI
 		_mapDisplay = GetNode<TextureRect>("MainLayout/MapContainer/MapDisplay");
