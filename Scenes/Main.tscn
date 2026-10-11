@@ -58,6 +58,35 @@ text = "Rozpocznij proces"
 layout_mode = 2
 text = "Eksportuj jako SVG"
 
+[node name="HSeparator2" type="HSeparator" parent="MainLayout/Sidebar/VBoxContainer" unique_id=1150561374]
+layout_mode = 2
+
+[node name="PipelineLabel" type="Label" parent="MainLayout/Sidebar/VBoxContainer" unique_id=618159891]
+layout_mode = 2
+text = "Dodaj nowy algorytm"
+
+[node name="AddStepContainer" type="HBoxContainer" parent="MainLayout/Sidebar/VBoxContainer" unique_id=1213991486]
+layout_mode = 2
+
+[node name="AddStepDropdown" type="OptionButton" parent="MainLayout/Sidebar/VBoxContainer/AddStepContainer" unique_id=338904869]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AddStepButton" type="Button" parent="MainLayout/Sidebar/VBoxContainer/AddStepContainer" unique_id=1113113636]
+layout_mode = 2
+text = "Dodaj algorytm"
+
+[node name="StepsLabel" type="Label" parent="MainLayout/Sidebar/VBoxContainer" unique_id=1791120581]
+layout_mode = 2
+text = "Obecna kolejka algorytmów"
+
+[node name="StepScrollContainer" type="ScrollContainer" parent="MainLayout/Sidebar/VBoxContainer" unique_id=269687855]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StepsListContainer" type="VBoxContainer" parent="MainLayout/Sidebar/VBoxContainer/StepScrollContainer" unique_id=1214416459]
+layout_mode = 2
+
 [node name="MapContainer" type="PanelContainer" parent="MainLayout" unique_id=407626999]
 layout_mode = 2
 size_flags_horizontal = 3

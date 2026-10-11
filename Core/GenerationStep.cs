@@ -21,6 +21,13 @@ public abstract class GenerationStep
 	/// <summary> Kategoria kroku wykorzystywana przez UI i Managera do zapobiegania błędom logiki. </summary>
 	public StepCategory Category { get; protected set; }
 
+	// kontrakty i/o
+	/// <summary> Jakiego typu danych ten algorytm spodziewa się na wejściu. </summary>
+	public MapDataType ExpectedInput { get; protected set; }
+
+	/// <summary> Jaki typ danych ten algorytm zwraca po swoim wykonaniu. </summary>
+	public MapDataType GeneratedOutput { get; protected set; }
+
 	/// <summary> Główna metoda wykonująca algorytm.</summary>
 	/// <param name="inputData">Mapa wejściowa z poprzedniego kroku (lub pusta siatka).</param>
 	/// <param name="seed">Globalne lub lokalne ziarno determinujące losowość kroku.</param>

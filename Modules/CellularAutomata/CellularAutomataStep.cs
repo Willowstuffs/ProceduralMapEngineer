@@ -16,6 +16,8 @@ public class CellularAutomataStep : GenerationStep
 	{
 		StepName = "Automat Komórkowy (Wygładzanie)";
 		Category = StepCategory.Modifier;
+		ExpectedInput = MapDataType.Continuous; //Obecna wersja do binaryzowania szumu
+		GeneratedOutput = MapDataType.Discrete; // Zwraca 0 lub 1
 		_iterations = iterations;
 		_threshold = threshold;
 	}
@@ -60,6 +62,7 @@ public class CellularAutomataStep : GenerationStep
 				}
 			}
 		}
+		inputData.DataType = GeneratedOutput;
 
 		return inputData;
 	}

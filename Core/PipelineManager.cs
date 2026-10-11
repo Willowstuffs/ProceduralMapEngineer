@@ -26,30 +26,18 @@ public class PipelineManager
 		if (_steps.Count > 0)
 			_steps.RemoveAt(_steps.Count - 1);
 	}
+	
+	/// <summary> Usuwa dowolny krok z potoku na podstawie jego indeksu. </summary>
+	public void RemoveStepAt(int index)
+	{
+		if (index >= 0 && index < _steps.Count)
+		{
+			_steps.RemoveAt(index);
+		}
+	}
 
 	/// <summary> Czyszczenie potoku.</summary>
 	public void ClearSteps() => _steps.Clear();
-
-	/// <summary> Sprawdza, czy obecna konfiguracja potoku jest logicznie poprawna.
-	/// Zwraca false i komunikat błędu, jeśli wykryje anomalię. </summary>
-	public bool ValidatePipeline(out string errorMessage)
-	{
-		errorMessage = string.Empty;
-
-		if (_steps.Count == 0)
-		{
-			errorMessage = "Potok jest pusty. Dodaj przynajmniej jeden krok (Generator).";
-			return false;
-		}
-
-		//Pierwszy krok musi być kategorii Generator
-		if (_steps[0].Category != StepCategory.Generator)
-		{
-			errorMessage = $"Błąd: Pierwszy krok to '{_steps[0].StepName}' (Modyfikator). Potok musi zaczynać się od Generatora.";
-			return false;
-		}
-		return true;
-	}
 
 	/// <summary>
 	/// Uruchamia wszystkie kroki potoku sekwencyjnie.
@@ -73,5 +61,37 @@ public class PipelineManager
 		}
 
 		return currentData;
+	}
+	
+	/// <summary> Sprawdza zgodność kontraktów we/wy między kolejnymi algorytmami by pilnować logiczną poprawność kolejki.  </summary>
+	public bool ValidatePipeline(out string errorMessage)
+	{
+		errorMessage = string.Empty;
+
+		if (_steps.Count == 0)
+		{
+			errorMessage = "Potok jest pusty. Dodaj przynajmniej jeden algorytm generujący.";
+			return false;
+		}
+
+		// Śledzenie typów danych płynących przez potok, pierwszy pusty
+		MapDataType currentDataType = MapDataType.Empty;
+
+		for (int i = 0; i < _steps.Count; i++)
+		{
+			var step = _steps[i];
+
+			// Jeśli algorytm oczekuje czegoś innego, niż dostarczono i nie jest to pierwsze wejście
+			if (step.ExpectedInput != currentDataType)
+			{
+				errorMessage = $"Błąd w kroku {i + 1} ({step.StepName}): Oczekiwano danych typu '{step.ExpectedInput}', ale otrzymano '{currentDataType}' z poprzedniego kroku.";
+				return false;
+			}
+
+			// Aktualizacja typu danych na wyjście z obecnego algorytmu
+			currentDataType = step.GeneratedOutput;
+		}
+
+		return true;
 	}
 }

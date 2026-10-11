@@ -15,13 +15,15 @@ public class NoiseGenerationStep : GenerationStep
 	{
 		StepName = "Generator Szumu Spójnego";
 		Category = StepCategory.Generator; //kategoria do blokowania akcji
+		ExpectedInput = MapDataType.Empty;      // Nie potrzebuje niczego na wejściu
+		GeneratedOutput = MapDataType.Continuous; // Zwraca płynne wartości
 		
 		//Konfiguracja bazowa szumu
 		//todo: parametry w ui
 		_noise = new FastNoiseLite();
 		_noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
 		//Częstotliwość, tzn gęstość struktur. Im mniejsza, tym większe
-		_noise.Frequency = 0.5f;
+		_noise.Frequency = 0.02f;
 	}
 
 	public override MapData Execute(MapData inputData, ulong seed)
@@ -42,6 +44,7 @@ public class NoiseGenerationStep : GenerationStep
 				inputData.SetValue(x, y, normalizedValue);
 			}
 		}
+		inputData.DataType = GeneratedOutput;
 
 		return inputData;
 	}

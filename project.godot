@@ -12,7 +12,7 @@ config_version=5
 
 config/name="ProceduralMapEngineer"
 run/main_scene="uid://bjxsb8vl1ssrg"
-config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [dotnet]
