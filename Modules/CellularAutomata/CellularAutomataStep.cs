@@ -9,32 +9,35 @@ namespace ProceduralMapPipeline.Modules.CellularAutomata;
 /// </summary>
 public class CellularAutomataStep : GenerationStep
 {
-	private int _iterations;
-	private float _threshold;
+	public int Iterations { get; set; }
+	public float Threshold { get; set; }
 
 	public CellularAutomataStep(int iterations = 4, float threshold = 0.5f)
 	{
 		StepName = "Automat Komórkowy (Wygładzanie)";
 		Category = StepCategory.Modifier;
-		ExpectedInput = MapDataType.Continuous; //Obecna wersja do binaryzowania szumu
-		GeneratedOutput = MapDataType.Discrete; // Zwraca 0 lub 1
-		_iterations = iterations;
-		_threshold = threshold;
+		ExpectedInput = MapDataType.Continuous;
+		GeneratedOutput = MapDataType.Discrete;
+		
+		Iterations = iterations;
+		Threshold = threshold;
 	}
 
 	public override MapData Execute(MapData inputData, ulong seed)
 	{
+		ulong actualSeed = GetActualSeed(seed);
+		
 		int width = inputData.Width;
 		int height = inputData.Height;
 
 		//Binaryzacja, stan pusty lub ściana
 		for (int i = 0; i < inputData.Grid.Length; i++)
 		{
-			inputData.Grid[i] = inputData.Grid[i] >= _threshold ? 1f : 0f;
+			inputData.Grid[i] = inputData.Grid[i] >= Threshold ? 1f : 0f;
 		}
 
 		//Symulacja, iteracje automatu
-		for (int step = 0; step < _iterations; step++)
+		for (int step = 0; step < Iterations; step++)
 		{
 			//nowy bufor, by czytać stary stan podczas modyfikowania nowego
 			float[] oldGrid = new float[inputData.Grid.Length];

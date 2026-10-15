@@ -27,7 +27,17 @@ public abstract class GenerationStep
 
 	/// <summary> Jaki typ danych ten algorytm zwraca po swoim wykonaniu. </summary>
 	public MapDataType GeneratedOutput { get; protected set; }
-
+	
+	//
+	public bool UseLocalSeed { get; set; } = false;
+	public ulong LocalSeed { get; set; } = 12345;
+	
+	/// <summary> Zwraca właściwe ziarno dla tego kroku (lokalne lub globalne). </summary>
+	protected ulong GetActualSeed(ulong globalSeed)
+	{
+		return UseLocalSeed ? LocalSeed : globalSeed;
+	}
+	
 	/// <summary> Główna metoda wykonująca algorytm.</summary>
 	/// <param name="inputData">Mapa wejściowa z poprzedniego kroku (lub pusta siatka).</param>
 	/// <param name="seed">Globalne lub lokalne ziarno determinujące losowość kroku.</param>

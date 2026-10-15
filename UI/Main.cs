@@ -24,6 +24,11 @@ public partial class Main : Control
 
 	// Menedżer potoku
 	private PipelineManager _pipelineManager;
+	
+	// Prawy panel
+	private int _selectedStepIndex = -1;
+	private VBoxContainer _propertiesContainer;
+	private Label _inspectorTitle;
 
 	public override void _Ready()
 	{
@@ -40,6 +45,9 @@ public partial class Main : Control
 		_stepListContainer = sidebarVBox.GetNode<VBoxContainer>("StepScrollContainer/StepsListContainer");
 		_addStepDropdown = sidebarVBox.GetNode<OptionButton>("AddStepContainer/AddStepDropdown");
 		_addStepButton = sidebarVBox.GetNode<Button>("AddStepContainer/AddStepButton");
+		
+		_propertiesContainer = GetNode<VBoxContainer>("MainLayout/RightPanel/InspectorLayout/ScrollContainer/PropertiesContainer");
+		_inspectorTitle = GetNode<Label>("MainLayout/RightPanel/InspectorLayout/InspectorTitle");
 
 		// Subskrypcja sygnałów
 		_generateButton.Pressed += OnGenerateButtonPressed;
@@ -86,7 +94,7 @@ public partial class Main : Control
 	}
 	
 	/// <summary>
-	/// Czyści i na nowo buduje listę kroków w UIku na podstawie stanu w PipelineManager
+	/// Czyści i na nowo buduje listę kroków w UI na podstawie stanu w PipelineManager
 	/// </summary>
 	private void RefreshStepListUI()
 	{
@@ -105,28 +113,176 @@ public partial class Main : Control
 			// Wiersz UI dla danego kroku
 			HBoxContainer stepRow = new HBoxContainer();
 			
-			Label stepLabel = new Label
-			{
-				Text = $"{index + 1}. {step.StepName}",
-				SizeFlagsHorizontal = SizeFlags.ExpandFill // zmuszenie etykiety do wypełnienia miejsca
-			};
-			
+			// Tworzenie pzycisku z nazwą algorytmu
+			Button stepSelectButton = new Button
+				{
+					Text = $"{index + 1}. {step.StepName}",
+					SizeFlagsHorizontal = SizeFlags.ExpandFill,
+					// wizualne wyróżnienie jeśli to ten kliknięty
+					Flat = _selectedStepIndex != index 
+				};
+
+			stepSelectButton.Pressed += () => 
+				{
+					_selectedStepIndex = index;
+					RefreshStepListUI(); // Odświeżamy listę, by zaktualizować podświetlenie
+					UpdateRightPanel();  // Budujemy inspektor właściwości
+				};
+			// Przycisk usuwania
 			Button removeButton = new Button { Text = "X" };
 			removeButton.Pressed += () => 
 			{
 				_pipelineManager.RemoveStepAt(index);
+				
+				// Aktualizacja zaznaczenia po usunięciu
+				if (_selectedStepIndex == index)
+					_selectedStepIndex = -1;
+				else if (_selectedStepIndex > index)
+					_selectedStepIndex--;
+
 				RefreshStepListUI();
+				UpdateRightPanel();
+				RunPipelineAndRender();
 			};
 
-			stepRow.AddChild(stepLabel);
+			stepRow.AddChild(stepSelectButton);
 			stepRow.AddChild(removeButton);
 			_stepListContainer.AddChild(stepRow);
 		}
 	}
 	
-	//przycisk wywołujący render
+	/// <summary> Generuje kontrolki edycji właściwości w prawym panelu dla zaznaczonego algorytmu.</summary>
+	private void UpdateRightPanel()
+	{
+		//Czyszczenie poprzednich kontrolek
+		foreach (Node child in _propertiesContainer.GetChildren())
+		{
+			child.QueueFree();
+		}
+
+		// Zabezpieczenie jeśli nic nie jest zaznaczone
+		if (_selectedStepIndex < 0 || _selectedStepIndex >= _pipelineManager.Steps.Count)
+		{
+			_inspectorTitle.Text = "Właściwości: Brak zaznaczenia";
+			return;
+		}
+
+		var step = _pipelineManager.Steps[_selectedStepIndex];
+		_inspectorTitle.Text = $"Właściwości: {step.StepName}";
+
+		// Sekcja 1 Ziarno Lokalne (Wspólne dla wszystkich kroków)
+		_propertiesContainer.AddChild(new Label { Text = " Konfiguracja Ziarna " });
+
+		var useLocalSeedCheck = new CheckBox
+		{
+			Text = "Użyj lokalnego ziarna",
+			ButtonPressed = step.UseLocalSeed
+		};
+		useLocalSeedCheck.Toggled += (toggled) =>
+		{
+			step.UseLocalSeed = toggled;
+			UpdateRightPanel(); // Przeładowanie by pokazać/ukryć pole
+			RunPipelineAndRender();
+		};
+		_propertiesContainer.AddChild(useLocalSeedCheck);
+
+		if (step.UseLocalSeed)
+		{
+			var seedRow = new HBoxContainer();
+			seedRow.AddChild(new Label { Text = "Lokalne ziarno: " });
+
+			var seedInput = new SpinBox
+			{
+				MinValue = 0,
+				MaxValue = 9999999,
+				Value = step.LocalSeed,
+				SizeFlagsHorizontal = SizeFlags.ExpandFill
+			};
+			seedInput.ValueChanged += (val) =>
+			{
+				step.LocalSeed = (ulong)val;
+				RunPipelineAndRender();
+			};
+
+			seedRow.AddChild(seedInput);
+			_propertiesContainer.AddChild(seedRow);
+		}
+
+		// Sekcja 2 Parametry dedykowane konkretnym algorytmom
+		_propertiesContainer.AddChild(new Label { Text = "\n--- Parametry Algorytmu ---" });
+
+		// Pattern matching
+		if (step is NoiseGenerationStep noiseStep)
+		{
+			var freqRow = new HBoxContainer();
+			freqRow.AddChild(new Label { Text = "Częstotliwość: " });
+
+			var freqInput = new SpinBox
+			{
+				MinValue = 0.001f,
+				MaxValue = 0.1f,
+				Step = 0.001f,
+				Value = noiseStep.Frequency,
+				SizeFlagsHorizontal = SizeFlags.ExpandFill
+			};
+			freqInput.ValueChanged += (val) =>
+			{
+				noiseStep.Frequency = (float)val;
+				RunPipelineAndRender();
+			};
+
+			freqRow.AddChild(freqInput);
+			_propertiesContainer.AddChild(freqRow);
+		}
+		else if (step is CellularAutomataStep caStep)
+		{
+			// Edycja iteracji
+			var iterRow = new HBoxContainer();
+			iterRow.AddChild(new Label { Text = "Iteracje: " });
+
+			var iterInput = new SpinBox
+			{
+				MinValue = 1,
+				MaxValue = 20,
+				Step = 1,
+				Value = caStep.Iterations,
+				SizeFlagsHorizontal = SizeFlags.ExpandFill
+			};
+			iterInput.ValueChanged += (val) =>
+			{
+				caStep.Iterations = (int)val;
+				RunPipelineAndRender();
+			};
+
+			iterRow.AddChild(iterInput);
+			_propertiesContainer.AddChild(iterRow);
+
+			// Edycja progu
+			var threshRow = new HBoxContainer();
+			threshRow.AddChild(new Label { Text = "Próg: " });
+
+			var threshInput = new SpinBox
+			{
+				MinValue = 0.0f,
+				MaxValue = 1.0f,
+				Step = 0.05f,
+				Value = caStep.Threshold,
+				SizeFlagsHorizontal = SizeFlags.ExpandFill
+			};
+			threshInput.ValueChanged += (val) =>
+			{
+				caStep.Threshold = (float)val;
+				RunPipelineAndRender();
+			};
+
+			threshRow.AddChild(threshInput);
+			_propertiesContainer.AddChild(threshRow);
+		}
+	}
+	
+	// Przycisk wywołujący render
 	private void OnGenerateButtonPressed() => RunPipelineAndRender();
-	//przycisk losujący ziarno
+	// Przycisk losujący ziarno
 	private void OnRandomSeedButtonPressed()
 	{
 		_seedInput.Value = GD.Randi();

@@ -10,6 +10,12 @@ namespace ProceduralMapPipeline.Modules.Noise;
 public class NoiseGenerationStep : GenerationStep
 {
 	private readonly FastNoiseLite _noise;
+		
+	public float Frequency
+	{
+		get => _noise.Frequency;
+		set => _noise.Frequency = value;
+	}
 
 	public NoiseGenerationStep()
 	{
@@ -29,7 +35,8 @@ public class NoiseGenerationStep : GenerationStep
 	public override MapData Execute(MapData inputData, ulong seed)
 	{
 		//FastNoiseLite przyjmuje int jako seed, więc rzutowanie
-		_noise.Seed = (int)(seed % int.MaxValue);
+		ulong actualSeed = GetActualSeed(seed);
+		_noise.Seed = (int)(actualSeed % int.MaxValue);
 
 		for (int x = 0; x < inputData.Width; x++)
 		{

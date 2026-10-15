@@ -94,3 +94,24 @@ size_flags_horizontal = 3
 [node name="MapDisplay" type="TextureRect" parent="MainLayout/MapContainer" unique_id=436794780]
 layout_mode = 2
 stretch_mode = 5
+
+[node name="RightPanel" type="PanelContainer" parent="MainLayout" unique_id=127566104]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="InspectorLayout" type="VBoxContainer" parent="MainLayout/RightPanel" unique_id=268398000]
+layout_mode = 2
+
+[node name="InspectorTitle" type="Label" parent="MainLayout/RightPanel/InspectorLayout" unique_id=560304064]
+layout_mode = 2
+text = "Właściwości algorytmu"
+
+[node name="HSeparator" type="HSeparator" parent="MainLayout/RightPanel/InspectorLayout" unique_id=1671690463]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainLayout/RightPanel/InspectorLayout" unique_id=548026596]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PropertiesContainer" type="VBoxContainer" parent="MainLayout/RightPanel/InspectorLayout/ScrollContainer" unique_id=1373447829]
+layout_mode = 2
