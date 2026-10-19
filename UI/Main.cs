@@ -29,6 +29,10 @@ public partial class Main : Control
 	private int _selectedStepIndex = -1;
 	private VBoxContainer _propertiesContainer;
 	private Label _inspectorTitle;
+	
+	// Podgląd/timeline
+	private HSlider _timelineSlider;
+	private Label _timelineLabel;
 
 	public override void _Ready()
 	{
@@ -48,11 +52,15 @@ public partial class Main : Control
 		
 		_propertiesContainer = GetNode<VBoxContainer>("MainLayout/RightPanel/InspectorLayout/ScrollContainer/PropertiesContainer");
 		_inspectorTitle = GetNode<Label>("MainLayout/RightPanel/InspectorLayout/InspectorTitle");
-
+		
+		_timelineSlider = GetNode<HSlider>("MainLayout/MapContainer/TimelineSlider");
+		_timelineLabel = GetNode<Label>("MainLayout/MapContainer/TimelineLabel");
+		
 		// Subskrypcja sygnałów
 		_generateButton.Pressed += OnGenerateButtonPressed;
 		_randomSeedButton.Pressed += OnRandomSeedButtonPressed;
 		_addStepButton.Pressed += OnAddStepButtonPressed;
+		_timelineSlider.ValueChanged += OnTimelineSliderChanged;
 
 		// Inicjalizacja dropdownu z dostępnymi algorytmami
 		PopulateAddStepDropdown();
@@ -289,6 +297,45 @@ public partial class Main : Control
 		RunPipelineAndRender();
 	}
 	
+	/// <summary> Wyciąganie mapy z historii po zmianie suwaka </summary>
+	private void OnTimelineSliderChanged(double value)
+	{
+		int stepIndex = (int)value;
+		// Jeśli nie ma żadnych algorytmów w kolejce
+		if (_pipelineManager.StepResults.Count == 0 || stepIndex < 0 || stepIndex >= _pipelineManager.StepResults.Count)
+			return;
+
+		// Pobieranie snapshotu z historii
+		MapData snapshotData = _pipelineManager.StepResults[stepIndex];
+		string stepName = _pipelineManager.Steps[stepIndex].StepName;
+
+		_timelineLabel.Text = $"Podgląd kroku {stepIndex + 1}: {stepName}";
+		// Renderowanie wybranego snapshotu
+		RenderMapData(snapshotData);
+	}
+	
+	/// <summary> Wydzielona metoda renderująca by nie dublować kodu, dopis do historii </summary>
+	private void RenderMapData(MapData dataToRender)
+	{
+		int mapWidth = dataToRender.Width;
+		int mapHeight = dataToRender.Height;
+		
+		//Konwersja danych analitycznych MapData na reprezentację wizualną będącą Image
+		var image = Image.CreateEmpty(mapWidth, mapHeight, false, Image.Format.Rgb8);
+
+		for (int x = 0; x < mapWidth; x++)
+		{
+			for (int y = 0; y < mapHeight; y++)
+			{
+				float val = dataToRender.GetValue(x, y);
+				//Mapa w skali szarości na podstawie znormalizowanych danych [0, 1]
+				image.SetPixel(x, y, new Color(val, val, val));
+			}
+		}
+
+		_mapDisplay.Texture = ImageTexture.CreateFromImage(image);
+	}
+	
 
 	//todo: export
 	private void OnExportButtonPressed()
@@ -296,12 +343,10 @@ public partial class Main : Control
 		GD.Print("Export SVG triggerowany - logika wkrótce!");
 	}
 
-	/// <summary>
-	/// Odpala potok przetwarzania danych, a następnie renderuje wynik matematyczny na ekranie.
-	/// </summary>
+	/// <summary> Odpala potok przetwarzania danych a potem renderuje wynik matematyczny na ekranie </summary>
 	private void RunPipelineAndRender()
 	{
-		// walidowanie potoku
+		// Walidowanie potoku
 		if (!_pipelineManager.ValidatePipeline(out string errorMessage))
 		{
 			// Na razie logowanie błędu do konsoli, todo: popup ui
@@ -316,20 +361,18 @@ public partial class Main : Control
 
 		//Wykonanie potoku odseparowane od UI
 		MapData finalMapData = _pipelineManager.ExecutePipeline(mapWidth, mapHeight, currentSeed);
-
-		//Konwersja danych analitycznych MapData na reprezentację wizualną będącą Image
-		var image = Image.CreateEmpty(mapWidth, mapHeight, false, Image.Format.Rgb8);
-
-		for (int x = 0; x < mapWidth; x++)
+		
+		// Konfigurowanie historii snapshotów
+		int stepCount = _pipelineManager.StepResults.Count;
+		if (stepCount > 0)
 		{
-			for (int y = 0; y < mapHeight; y++)
-			{
-				float val = finalMapData.GetValue(x, y);
-				//Mapa w skali szarości na podstawie znormalizowanych danych [0, 1]
-				image.SetPixel(x, y, new Color(val, val, val));
-			}
+			_timelineSlider.MinValue = 0;
+			_timelineSlider.MaxValue = stepCount - 1;
+			_timelineSlider.Value = stepCount - 1; // Ustawiane na sam koniec
+			_timelineSlider.TickCount = stepCount;
 		}
 
-		_mapDisplay.Texture = ImageTexture.CreateFromImage(image);
+		// Render ostatecznej mapy
+		OnTimelineSliderChanged(_timelineSlider.Value);
 	}
 }

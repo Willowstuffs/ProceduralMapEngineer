@@ -3,13 +3,14 @@ using System.Diagnostics;
 
 namespace ProceduralMapPipeline.Core;
 
-/// <summary>
-/// Zarządza potokiem generacji. Przechowuje kolekcję kroków algorytmicznych
-/// i wykonuje je sekwencyjnie przekazując dane z jednego kroku do kolejnego.
-/// </summary>
+/// <summary> Zarządza potokiem generacji. Przechowuje kolekcję kroków algorytmicznych
+/// i wykonuje je sekwencyjnie przekazując dane z jednego kroku do kolejnego. </summary>
 public class PipelineManager
 {
 	private readonly List<GenerationStep> _steps = new();
+	
+	// Przechowuje wyniki po każdym uruchomionym kroku 
+	public List<MapData> StepResults { get; private set; } = new();
 	
 	//Właściwość do odczytywania obecnego kroku
 	public IReadOnlyList<GenerationStep> Steps => _steps.AsReadOnly();
@@ -33,16 +34,15 @@ public class PipelineManager
 		if (index >= 0 && index < _steps.Count)
 		{
 			_steps.RemoveAt(index);
+			StepResults.Clear(); // Zdezaktualizowane dane, usuwanie snapshotów
 		}
 	}
 
-	/// <summary> Czyszczenie potoku.</summary>
+	/// <summary> Czyszczenie potoku </summary>
 	public void ClearSteps() => _steps.Clear();
 
-	/// <summary>
-	/// Uruchamia wszystkie kroki potoku sekwencyjnie.
-	/// </summary>
-	/// <returns>Ostatecznie przetworzone dane mapy.</returns>
+	/// <summary> Uruchamia wszystkie kroki potoku sekwencyjnie. </summary>
+	/// <returns> Ostatecznie przetworzone dane mapy </returns>
 	public MapData ExecutePipeline(int width, int height, ulong globalSeed)
 	{
 		if (!ValidatePipeline(out string error))
@@ -50,6 +50,7 @@ public class PipelineManager
 			throw new System.InvalidOperationException(error);
 		}
 		
+		StepResults.Clear(); // Czyszczenie historii potoku
 		//Tworzy czystą mapę początkową
 		MapData currentData = new MapData(width, height);
 
@@ -57,17 +58,20 @@ public class PipelineManager
 		foreach (var step in _steps)
 		{
 			//todo: stoper, benchmarki
+			// Przetwarzanie danych
 			currentData = step.Execute(currentData, globalSeed);
+			
+			// Zapisywanie kopii do historii
+			StepResults.Add(currentData.Clone());
 		}
 
 		return currentData;
 	}
 	
-	/// <summary> Sprawdza zgodność kontraktów we/wy między kolejnymi algorytmami by pilnować logiczną poprawność kolejki.  </summary>
+	/// <summary> Sprawdza zgodność kontraktów we/wy między kolejnymi algorytmami by pilnować logiczną poprawność kolejki. </summary>
 	public bool ValidatePipeline(out string errorMessage)
 	{
 		errorMessage = string.Empty;
-
 		if (_steps.Count == 0)
 		{
 			errorMessage = "Potok jest pusty. Dodaj przynajmniej jeden algorytm generujący.";
@@ -80,7 +84,6 @@ public class PipelineManager
 		for (int i = 0; i < _steps.Count; i++)
 		{
 			var step = _steps[i];
-
 			// Jeśli algorytm oczekuje czegoś innego, niż dostarczono i nie jest to pierwsze wejście
 			if (step.ExpectedInput != currentDataType)
 			{

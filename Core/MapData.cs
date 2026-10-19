@@ -51,4 +51,15 @@ public class MapData
 			
 		Grid[y * Width + x] = value;
 	}
+	
+	/// <summary> Tworzy głęboką kopię danych mapy
+	/// do tworzenia zrzutów historii algorytmów</summary>
+	public MapData Clone()
+	{
+		var clone = new MapData(Width, Height, DataType);
+		// Kopiowanie ciągłego bloku pamięci
+		Array.Copy(this.Grid, clone.Grid, this.Grid.Length);
+		return clone;
+	}
+	
 }

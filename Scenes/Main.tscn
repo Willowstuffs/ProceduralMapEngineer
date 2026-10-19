@@ -87,13 +87,21 @@ size_flags_vertical = 3
 [node name="StepsListContainer" type="VBoxContainer" parent="MainLayout/Sidebar/VBoxContainer/StepScrollContainer" unique_id=1214416459]
 layout_mode = 2
 
-[node name="MapContainer" type="PanelContainer" parent="MainLayout" unique_id=407626999]
+[node name="MapContainer" type="VBoxContainer" parent="MainLayout" unique_id=1669718320]
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="MapDisplay" type="TextureRect" parent="MainLayout/MapContainer" unique_id=436794780]
 layout_mode = 2
 stretch_mode = 5
+
+[node name="TimelineSlider" type="HSlider" parent="MainLayout/MapContainer" unique_id=1136152912]
+layout_mode = 2
+rounded = true
+
+[node name="TimelineLabel" type="Label" parent="MainLayout/MapContainer" unique_id=139669511]
+layout_mode = 2
+horizontal_alignment = 1
 
 [node name="RightPanel" type="PanelContainer" parent="MainLayout" unique_id=127566104]
 custom_minimum_size = Vector2(300, 0)
